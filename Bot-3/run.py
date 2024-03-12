@@ -5,97 +5,83 @@ from aiogram.fsm.state import StatesGroup, State
 from aiogram.types import Message, ReplyKeyboardRemove
 from aiogram.enums import ParseMode
 from aiogram.utils.markdown import hbold
-from aiogram.utils.keyboard import ReplyKeyboardBuilder
+from answers import (ct_choice_answer, ct_choice_gender, ct_choice_cloth, 
+                     ct_choice_brand, white,
+                     ct_choice, ct_yes, ct_no,
+                     inven, buy, X)
+from keyboards import *
+import constants
+import answers
 
 from loguru import logger
 
+import os
 import logging
 import asyncio
 import sys
 
-TOKEN = '6656625653:AAGECEK8f4S50wmAu7YRl5M9jdz7Vmz-QV4'
-
 router = Router()
 dp = Dispatcher()
 
-class CategoryStates(StatesGroup):
-    choosing_category = State()
-    choosing_return = State()
-
-def Category():
-    builder = ReplyKeyboardBuilder()
-    builder.button(text='✨Categories')
-    builder.adjust(2,1)
-    
-    return builder.as_markup()
-
-def Category_choice():
-    builder = ReplyKeyboardBuilder()
-    builder.button(text='🚹Man')
-    builder.button(text='🚺Woman')
-    builder.button(text='🔃Return')
-    builder.adjust(2,1)
-    return builder.as_markup()
-
-def Man_category():
-    builder = ReplyKeyboardBuilder()
-    builder.button(text='👕Shirt')
-    builder.button(text='🩳Pants')
-    builder.button(text='🧥Jacket')
-    builder.button(text='🔃Return')
-    builder.adjust(1,4)
-    return builder.as_markup()
-
-def Woman_category():
-    builder = ReplyKeyboardBuilder()
-    builder.button(text='🎓Cap')
-    builder.button(text='👗Skirt')
-    builder.button(text='👖Pants')
-    builder.button(text='🔃Return')
-    builder.adjust(1,4)
-    builder.row(4, 100)
-    return builder.as_markup()
 
 @dp.message(CommandStart())
 async def command_start_handler(message: Message) -> None:
-    await message.answer_photo(photo='https://i.pinimg.com/originals/75/a1/be/75a1beb1cd6533c17aec7c665333b099.jpg')
-    await message.reply(f'Welcome to our H&M Shop! Feel free to explore our features. To browse our shop, use /shop command.')
+    await message.reply(f'Welcome to our Shoe Shop! Feel free to explore our features. To browse our shop, use /shop command.')
     
-@router.message(Command('shop'))
-async def command_keyboard_handler(message: Message, state: FSMContext) -> None:
-    await message.reply(f'Use the button..', reply_markup=Category())
-    await state.set_state(CategoryStates.choosing_category)
+@dp.message(Command('shop'))
+async def command_keyboard_handler(message: Message) -> None:
+    await message.reply(f'Use the button..', reply_markup=category())
 
-@router.message(CategoryStates.choosing_category)
-async def text_handler(message: Message, state: FSMContext) -> None:
-    try:
-        if message.text == '✨Categories':
-            await message.reply(f'✨Categories', reply_markup=Category_choice())
-        elif message.text == '🚹Man':
-            await message.reply(f'🚹Man', reply_markup=Man_category())
-        elif message.text == '👕Shirt':
-            await message.reply(f'👕Shirt')
-        elif message.text == '🩳Pants':
-            await message.reply(f'🩳Pants')
-        elif message.text == '🧥Jacket':
-            await message.reply(f'🧥Jacket')
-        elif message.text == '🚺Woman':
-            await message.reply(f'🚺Woman', reply_markup=Woman_category())
-        elif message.text == '🎓Cap':
-            await message.reply(f'🎓Cap')
-        elif message.text == '👗Skirt':
-            await message.reply(f'👗Skirt')
-        elif message.text == '🚺👖Pants':
-            await message.reply(f'🚺👖Pants')
-        elif message.text == '↩️Return':
-            await message.reply("↩️Return")
-        
-        await state.clear()
-    except TypeError:
-        await message.answer("Nice try!")
+@dp.message(F.text == '✨Categories')
+async def ct_first(message: Message) -> None:
+    await ct_choice_answer(message)
+
+@router.message(F.text == '🚹Man')
+async def ct_second(message: Message) -> None:
+    await ct_choice_gender(message)
+
+@router.message(F.text == '👞Shoes')
+async def ct_third(message: Message) -> None:
+    await ct_choice_cloth(message)
+
+@router.message(F.text == '38')
+async def size_1(message: Message) -> None:
+    await ct_choice_brand(message)
+
+# @router.message(F.text == '🌿Brand')
+# async def brand(message: Message, state: FSMContext) -> None:
+#     await ct_choice_brand(message, state)
+
+@router.message(F.text == 'Off White')
+async def choice_1(message: Message, state: FSMContext) -> None:
+    await state.set_state(X.x1)
+    await white(message, state)
+    await ct_choice(message, state)
+    
+
+@router.message(F.text == 'Inventory')
+async def inventory(message: Message) -> None:
+    await inven(message)
+
+@router.message(F.text == '✅Yes')
+async def category_yes(message: Message) -> None:
+    await ct_yes(message)
+
+@router.message(F.text == '❌No')
+async def category_no(message: Message, state: FSMContext) -> None:
+    await ct_no(message)
+
+@router.message(F.text == '↩️Return')
+async def ct_return(message: Message) -> None:
+    await message.reply('↩️Return', reply_markup=category)
+
+@router.message(F.text == '💰Buy')
+async def ct_return(message: Message) -> None:
+    await buy(message)
+    await message.reply('Successful✅')
 
 async def main() -> None:
-    bot = Bot(TOKEN, parse_mode=ParseMode.HTML)
+    bot = Bot(constants.TOKEN, parse_mode=ParseMode.HTML)
     dp.include_router(router=router)
     await dp.start_polling(bot)
 
