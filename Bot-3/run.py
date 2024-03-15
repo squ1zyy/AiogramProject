@@ -6,8 +6,8 @@ from aiogram.types import Message, ReplyKeyboardRemove
 from aiogram.enums import ParseMode
 from aiogram.utils.markdown import hbold
 from answers import (ct_choice_answer, ct_choice_gender, ct_choice_cloth, 
-                     ct_choice_brand, white,
-                     ct_choice, ct_yes, ct_no,
+                     ct_choice_brand, 
+                     ct_yes, ct_no,
                      inven, buy, X)
 from keyboards import *
 import constants
@@ -22,6 +22,15 @@ import sys
 
 router = Router()
 dp = Dispatcher()
+
+sneakers = [{'id': '1', 'brand': 'Off-White', 'size': 38, 'price': '2000$', 'description': 'Something', 
+             'photo': 'https://cdn-images.farfetch-contents.com/off-white-out-of-office-ooo-sneakers_16863794_42669593_1000.jpg'},
+            {'id': '2', 'brand': 'Nike', 'size': 38, 'price': '1500$', 'description': 'Something', 
+             'photo': 'https://lishop.store/image/cache/products/9/6/6/nike-air-max-terrascape-plus-triple-black-1000x1000.jpg'},
+            {'id': '3', 'brand': 'Balenciaga', 'size': 38, 'price': '3200$', 'description': 'Something', 
+             'photo': 'https://img.ssensemedia.com/images/231342M237019_1/balenciaga-black-track-led-sneakers.jpg'},]
+
+inv = []
 
 
 @dp.message(CommandStart())
@@ -52,11 +61,6 @@ async def size_1(message: Message) -> None:
 # async def brand(message: Message, state: FSMContext) -> None:
 #     await ct_choice_brand(message, state)
 
-@router.message(F.text == 'Off White')
-async def choice_1(message: Message, state: FSMContext) -> None:
-    await state.set_state(X.x1)
-    await white(message, state)
-    await ct_choice(message, state)
     
 
 @router.message(F.text == 'Inventory')
@@ -80,10 +84,53 @@ async def ct_return(message: Message) -> None:
     await buy(message)
     await message.reply('Successful✅')
 
+
+@router.message(X.x1)
+async def ct_choice(message: Message, state: FSMContext) -> None:
+    await state.update_data(name=message.text)
+    answ = message.text.casefold()
+    print(answ)
+    for i in sneakers:
+        if i['id'] == answ:
+            inv.append(i)
+    print(inv)
+
+
+@router.message()
+async def text_handler(message: Message, state: FSMContext) -> None:
+    if message.text == '↩️Return':
+        try:
+            await message.answer("↩️Return")
+        except Exception as e:
+            logger.error(e)
+    elif message.text == 'Off White':
+        for i in sneakers:
+            await message.answer_photo(f'{i["photo"]}')
+            await message.reply(f'{i["id"]}\nBrand: {i["brand"]}\nSize: {i["size"]}\nPrice: {i["price"]}\nDescription: {i["description"]}\n')
+        await state.set_state(X.x1)
+        await message.answer(f'What is your choice?', reply_markup=agreement())
+        
+
 async def main() -> None:
     bot = Bot(constants.TOKEN, parse_mode=ParseMode.HTML)
     dp.include_router(router=router)
     await dp.start_polling(bot)
+
+
+async def buy(message: Message):
+    for i in range(len(inv)):
+        inv.pop(i)
+    print(inv)
+
+async def inven(message: Message) -> None:
+    for i in inv:
+        if inv is not None:
+            x = f"Brand: {i['brand']}\n{'-'*15}\nSize: {i['size']}\n{'-'*15}\nprice: {i['price']}"
+        else:
+            await message.reply(text='Inventory is empty.')
+        await message.reply(text=f'Inventory:\n\n{x}', reply_markup=inventory())
+    print(inv)
+
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO, stream=sys.stdout)
