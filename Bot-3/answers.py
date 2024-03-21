@@ -9,6 +9,7 @@ from keyboards import *
 
 from loguru import logger
 
+
 router = Router()
 dp = Dispatcher()
 
@@ -36,25 +37,8 @@ async def ct_choice_cloth(message: Message) -> None:
 async def ct_choice_brand(message: Message) -> None:
     await message.reply(f'🌿Brand', reply_markup=brand_choose())
 
-
-@router.message()
-async def ct_yes(message: Message) -> None:
-    await message.reply(text=f'Item now is in inventory', reply_markup=category_choice())
-
-
 async def ct_no(message: Message) -> None:
     await message.reply(text=f'🔃Return', reply_markup=man_category())
 
-async def buy(message: Message):
-    for i in range(len(inv)):
-        inv.pop(i)
-    print(inv)
-
-async def inven(message: Message) -> None:
-    for i in inv:
-        if inv is not None:
-            x = f"Brand: {i['brand']}\n{'-'*15}\nSize: {i['size']}\n{'-'*15}\nprice: {i['price']}"
-        else:
-            await message.reply(text='Inventory is empty.')
-        await message.reply(text=f'Inventory:\n\n{x}', reply_markup=inventory())
-    print(inv)
+async def ct_yes(message: Message) -> None:
+    await message.reply(text=f'Item now is in inventory', reply_markup=category_choice())
